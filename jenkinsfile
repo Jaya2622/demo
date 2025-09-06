@@ -4,7 +4,7 @@ spipeline {
     stages {
         stage('Build') {
             steps {
-                echo 'Building the application of my own'
+                echo 'Building the application of my own steps'
             }
         }
         stage('Test'){
