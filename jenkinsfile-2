@@ -1,0 +1,52 @@
+pipeline {
+    agent any
+
+    environment {
+        IMAGE_NAME = 'my-single-container-app'
+        IMAGE_TAG = 'latest'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo "Checking out source code..."
+                checkout scm
+            }
+        }
+
+        stage('Build Docker Image') {
+            steps {
+                echo "Building Docker image ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                script {
+                    dockerImage = docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
+                }
+            }
+        }
+
+        stage('Test') {
+            steps {
+                echo "Running tests inside Docker container"
+                script {
+                    dockerImage.inside {
+                        sh 'npm install'
+                        sh 'npm test'
+                    }
+                }
+            }
+        }
+
+        stage('Deploy') {
+            steps {
+                echo "Running Docker container from image"
+                sh "docker run -d -p 3000:3000 ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Cleaning up dangling Docker images"
+            sh "docker image prune -f"
+        }
+    }
+}
