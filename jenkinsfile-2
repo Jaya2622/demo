@@ -1,34 +1,22 @@
 pipeline {
     agent any
 
-    environment {
-        IMAGE_NAME = 'my-single-container-app'
-        IMAGE_TAG = 'latest'
-    }
-
     stages {
-        stage('Checkout') {
+        stage('Build') {
             steps {
-                echo "Checking out source code..."
-                checkout scm
-            }
-        }
-
-        stage('Build Docker Image') {
-            steps {
-                echo "Building Docker image ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
                 script {
-                    dockerImage = docker.build("${env.IMAGE_NAME}:${env.IMAGE_TAG}")
+                    echo 'Building Docker image...'
+                    dockerImage = docker.build("my-node-app:latest")
                 }
             }
         }
 
         stage('Test') {
             steps {
-                echo "Running tests inside Docker container"
                 script {
+                    echo 'Running tests inside Docker container...'
                     dockerImage.inside {
-                        sh 'npm install'
+                        sh 'npm install'  // Inside container is Linux, so sh works
                         sh 'npm test'
                     }
                 }
@@ -37,16 +25,9 @@ pipeline {
 
         stage('Deploy') {
             steps {
-                echo "Running Docker container from image"
-                sh "docker run -d -p 3000:3000 ${env.IMAGE_NAME}:${env.IMAGE_TAG}"
+                echo 'Deploying Docker container...'
+                bat 'docker run -d -p 3000:3000 my-node-app:latest' // Outside container, on Windows agent use bat
             }
-        }
-    }
-
-    post {
-        always {
-            echo "Cleaning up dangling Docker images"
-            sh "docker image prune -f"
         }
     }
 }
