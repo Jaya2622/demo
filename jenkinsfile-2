@@ -26,7 +26,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 echo 'Deploying Docker container...'
-                bat 'docker run -d -p 3000:3000 my-node-app:latest' // Outside container, on Windows agent use bat
+                bat 'docker run -d -p 3001:3001 my-node-app:latest' // Outside container, on Windows agent use bat
             }
         }
     }
